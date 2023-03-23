@@ -92,7 +92,6 @@ public class ToaGearCheckPanel extends PluginPanel
 				
 				if (player.getKey().getName().equals(lastUserSelected))
 				{
-					log.info("Setting tab selection to {}", player.getKey().getName());
 					partyTabs.setSelectedComponent(equipmentPanels);
 				}
 			}

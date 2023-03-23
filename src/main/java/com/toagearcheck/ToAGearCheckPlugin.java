@@ -77,8 +77,6 @@ public class ToAGearCheckPlugin extends Plugin
 				.priority(10)
 				.panel(toaGearCheckPanel)
 				.build();
-		
-		
 	}
 	
 	@Override
@@ -141,38 +139,36 @@ public class ToAGearCheckPlugin extends Plugin
 		}
 		
 		Stream<Widget> partyApplicantWidgetChildren = Arrays.stream(partyApplicantWidget).filter(x -> x.getOriginalWidth() == 114 && x.getOriginalHeight() == 22); //Easiest way to filter out the widget containing the player name
-		
 		List<String> playerListStr = new ArrayList<>();
 		HashMap<Player, List<ItemComposition>> playerList = new HashMap<>();
-		
 		
 		partyApplicantWidgetChildren.forEach(widget ->
 		{
 			playerListStr.add(widget.getText());
 		});
-		clientThread.invoke(() ->
+		
+		for (Player player : client.getPlayers())
 		{
-			for (Player player : client.getPlayers())
+			if (!playerListStr.contains(player.getName()))
 			{
-				if (!playerListStr.contains(player.getName()))
+				continue;
+			}
+			List<ItemComposition> listOfEquipment = new ArrayList<>();
+			PlayerComposition playerComposition = player.getPlayerComposition();
+			for (KitType kitType : KitType.values())
+			{
+				if (playerComposition.getEquipmentId(kitType) == -1)
 				{
 					continue;
 				}
-				List<ItemComposition> listOfEquipment = new ArrayList<>();
-				PlayerComposition playerComposition = player.getPlayerComposition();
-				for (KitType kitType : KitType.values())
+				clientThread.invoke(() ->
 				{
-					if (playerComposition.getEquipmentId(kitType) == -1)
-					{
-						continue;
-					}
-					
 					listOfEquipment.add(itemManager.getItemComposition(playerComposition.getEquipmentId(kitType)));
-					
-				}
-				playerList.put(player, listOfEquipment);
+				});
 			}
-			toaGearCheckPanel.updatePanel(playerList);
-		});
+			playerList.put(player, listOfEquipment);
+		}
+		toaGearCheckPanel.updatePanel(playerList);
+		
 	}
 }
