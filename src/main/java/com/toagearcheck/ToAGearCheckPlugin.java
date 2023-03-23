@@ -32,7 +32,7 @@ import java.util.stream.Stream;
 
 @Slf4j
 @PluginDescriptor(
-		name = "ToA party gear checker",
+		name = "ToA Party Gear Checker",
 		description = "Checks gear of party applicants",
 		tags = {"toa", "raids3", "tombs of amascut"},
 		enabledByDefault = false
