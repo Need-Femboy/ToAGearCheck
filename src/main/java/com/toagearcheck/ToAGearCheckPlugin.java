@@ -23,6 +23,7 @@ import net.runelite.client.util.ImageUtil;
 
 import javax.imageio.ImageIO;
 import javax.inject.Inject;
+import javax.swing.*;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -34,8 +35,7 @@ import java.util.stream.Stream;
 @PluginDescriptor(
 		name = "ToA Party Gear Checker",
 		description = "Checks gear of party applicants",
-		tags = {"toa", "raids3", "tombs of amascut"},
-		enabledByDefault = false
+		tags = {"toa", "raids3", "tombs of amascut"}
 )
 public class ToAGearCheckPlugin extends Plugin
 {
@@ -51,9 +51,7 @@ public class ToAGearCheckPlugin extends Plugin
 	@Inject
 	private ItemManager itemManager;
 	
-	@Getter(AccessLevel.PACKAGE)
 	private static final int PartyApplicantWidgetGroup = 774;
-	@Getter(AccessLevel.PACKAGE)
 	private static final int PartyApplicantWidgetChild = 48;
 	
 	private NavigationButton navButton;
@@ -61,8 +59,6 @@ public class ToAGearCheckPlugin extends Plugin
 	private boolean navButtonAdded = false;
 	private boolean checkingApplicants = false;
 	private ToaGearCheckPanel toaGearCheckPanel;
-	
-	private final int LOBBY = 13454;
 	
 	@Override
 	protected void startUp() throws Exception
@@ -92,6 +88,13 @@ public class ToAGearCheckPlugin extends Plugin
 		{
 			checkingApplicants = true;
 			refreshPanel();
+			SwingUtilities.invokeLater(() ->
+			{
+				if (!navButton.isSelected())
+				{
+					navButton.getOnSelect().run();
+				}
+			});
 		}
 	}
 	
@@ -108,7 +111,7 @@ public class ToAGearCheckPlugin extends Plugin
 	private void onGameTick(GameTick event)
 	{
 		Player lp = client.getLocalPlayer();
-		boolean inRegion = lp != null && lp.getWorldLocation().getRegionID() == LOBBY;
+		boolean inRegion = lp != null && lp.getWorldLocation().getRegionID() == 13454;
 		
 		if (inRegion && !navButtonAdded)
 		{
@@ -131,7 +134,7 @@ public class ToAGearCheckPlugin extends Plugin
 			return;
 		}
 		
-		Widget[] partyApplicantWidget = client.getWidget(ToAGearCheckPlugin.getPartyApplicantWidgetGroup(), ToAGearCheckPlugin.getPartyApplicantWidgetChild()).getChildren();
+		Widget[] partyApplicantWidget = client.getWidget(ToAGearCheckPlugin.PartyApplicantWidgetGroup, ToAGearCheckPlugin.PartyApplicantWidgetChild).getChildren();
 		
 		if (partyApplicantWidget == null) //Shouldn't ever be null
 		{
@@ -169,6 +172,5 @@ public class ToAGearCheckPlugin extends Plugin
 			playerList.put(player, listOfEquipment);
 		}
 		toaGearCheckPanel.updatePanel(playerList);
-		
 	}
 }

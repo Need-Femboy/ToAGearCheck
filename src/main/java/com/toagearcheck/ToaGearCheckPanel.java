@@ -96,10 +96,6 @@ public class ToaGearCheckPanel extends PluginPanel
 				}
 			}
 			
-			
-			GridBagConstraints tabConstraints = new GridBagConstraints();
-			tabConstraints.fill = GridBagConstraints.BOTH;
-			
 			repaint();
 			revalidate();
 		});
