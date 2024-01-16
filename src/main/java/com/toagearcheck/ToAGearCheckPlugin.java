@@ -90,9 +90,9 @@ public class ToAGearCheckPlugin extends Plugin
 			refreshPanel();
 			SwingUtilities.invokeLater(() ->
 			{
-				if (!navButton.isSelected())
+				if (navButtonAdded)
 				{
-					navButton.getOnSelect().run();
+					pluginToolbar.openPanel(navButton);
 				}
 			});
 		}
