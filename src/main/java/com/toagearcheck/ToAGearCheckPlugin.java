@@ -88,13 +88,10 @@ public class ToAGearCheckPlugin extends Plugin
 		{
 			checkingApplicants = true;
 			refreshPanel();
-			SwingUtilities.invokeLater(() ->
+			if (navButtonAdded)
 			{
-				if (navButtonAdded)
-				{
-					pluginToolbar.openPanel(navButton);
-				}
-			});
+				SwingUtilities.invokeLater(() -> pluginToolbar.openPanel(navButton));
+			}
 		}
 	}
 	
