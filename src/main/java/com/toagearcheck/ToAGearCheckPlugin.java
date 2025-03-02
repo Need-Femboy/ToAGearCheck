@@ -129,12 +129,12 @@ public class ToAGearCheckPlugin extends Plugin
 		BufferedImage icon = null;
 		if (raidInfo == RaidInfo.ToA)
 		{
-			icon = ImageUtil.loadImageResource(ToaGearCheckPanel.class, "toa.png");
+			icon = toaButton;
 			tooltip = "ToA" + tooltip;
 		}
 		else if (raidInfo == RaidInfo.ToB)
 		{
-			icon = ImageUtil.loadImageResource(ToaGearCheckPanel.class, "tob.png");
+			icon = tobButton;
 			tooltip = "ToB" + tooltip;
 		}
 		
