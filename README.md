@@ -1,4 +1,4 @@
-# ToA Applicant Gear Checker
+# Raid Applicant Gear Checker
 
 Plugin to view gear of people applying to currently viewed ToB/ToA party.
 
