@@ -1,17 +1,11 @@
 package com.toagearcheck;
 
-import lombok.AccessLevel;
-import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import net.runelite.api.Client;
-import net.runelite.api.ItemComposition;
-import net.runelite.api.Player;
-import net.runelite.api.PlayerComposition;
+import net.runelite.api.*;
 import net.runelite.api.events.GameTick;
 import net.runelite.api.events.WidgetClosed;
 import net.runelite.api.events.WidgetLoaded;
 import net.runelite.api.kit.KitType;
-import net.runelite.api.widgets.Widget;
 import net.runelite.client.callback.ClientThread;
 import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.game.ItemManager;
@@ -21,21 +15,18 @@ import net.runelite.client.ui.ClientToolbar;
 import net.runelite.client.ui.NavigationButton;
 import net.runelite.client.util.ImageUtil;
 
-import javax.imageio.ImageIO;
 import javax.inject.Inject;
 import javax.swing.*;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
-import java.util.stream.Stream;
 
 @Slf4j
 @PluginDescriptor(
-		name = "ToA Party Gear Checker",
+		name = "Raid Party Gear Checker",
 		description = "Checks gear of party applicants",
-		tags = {"toa", "raids3", "tombs of amascut"}
+		tags = {"toa", "raids3", "tombs of amascut", "tob", "theatre of blood"}
 )
 public class ToAGearCheckPlugin extends Plugin
 {
@@ -51,28 +42,23 @@ public class ToAGearCheckPlugin extends Plugin
 	@Inject
 	private ItemManager itemManager;
 	
-	private static final int PartyApplicantWidgetGroup = 774;
-	private static final int PartyApplicantWidgetChild = 48;
+	private BufferedImage toaButton;
+	private BufferedImage tobButton;
 	
 	private NavigationButton navButton;
 	
 	private boolean navButtonAdded = false;
 	private boolean checkingApplicants = false;
-	private ToaGearCheckPanel toaGearCheckPanel;
+	private ToaGearCheckPanel raidGearCheckPanel;
+	private int regionId = -1;
 	
 	@Override
 	protected void startUp() throws Exception
 	{
-		toaGearCheckPanel = injector.getInstance(ToaGearCheckPanel.class);
-		
-		BufferedImage icon = ImageUtil.loadImageResource(ToAGearCheckPlugin.class, "panelimage.png");
-		
-		navButton = NavigationButton.builder()
-				.tooltip("ToA Party Gear Checker")
-				.icon(icon)
-				.priority(10)
-				.panel(toaGearCheckPanel)
-				.build();
+		raidGearCheckPanel = injector.getInstance(ToaGearCheckPanel.class);
+		toaButton = ImageUtil.loadImageResource(ToaGearCheckPanel.class, "toa.png");
+		tobButton = ImageUtil.loadImageResource(ToaGearCheckPanel.class, "tob.png");
+		navButton = buildNavIcon(RaidInfo.ToA);
 	}
 	
 	@Override
@@ -84,7 +70,7 @@ public class ToAGearCheckPlugin extends Plugin
 	@Subscribe
 	private void onWidgetLoaded(WidgetLoaded event)
 	{
-		if (event.getGroupId() == PartyApplicantWidgetGroup)
+		if (RaidInfo.widgetAccess(event.getGroupId()))
 		{
 			checkingApplicants = true;
 			refreshPanel();
@@ -98,7 +84,7 @@ public class ToAGearCheckPlugin extends Plugin
 	@Subscribe
 	private void onWidgetClosed(WidgetClosed event)
 	{
-		if (event.getGroupId() == PartyApplicantWidgetGroup)
+		if (RaidInfo.widgetAccess(event.getGroupId()))
 		{
 			checkingApplicants = false;
 		}
@@ -107,21 +93,57 @@ public class ToAGearCheckPlugin extends Plugin
 	@Subscribe
 	private void onGameTick(GameTick event)
 	{
-		Player lp = client.getLocalPlayer();
-		boolean inRegion = lp != null && lp.getWorldLocation().getRegionID() == 13454;
+		int newRegionId = client.getLocalPlayer().getWorldLocation().getRegionID();
+		RaidInfo raidInfo = RaidInfo.inRegion(newRegionId);
+		boolean isInRaidLobby = raidInfo != null;
 		
-		if (inRegion && !navButtonAdded)
+		if (isInRaidLobby)
 		{
-			pluginToolbar.addNavigation(navButton);
+			if (!navButtonAdded)
+			{
+				navButton = buildNavIcon(raidInfo);
+				pluginToolbar.addNavigation(navButton);
+				navButtonAdded = true;
+			}
+			else if (newRegionId != regionId)
+			{ //If teleporting from ToA lobby straight to ToB
+				pluginToolbar.removeNavigation(navButton);
+				navButton = buildNavIcon(raidInfo);
+				pluginToolbar.addNavigation(navButton);
+			}
 		}
-		else if (!inRegion)
+		else if (navButtonAdded)
 		{
 			pluginToolbar.removeNavigation(navButton);
+			navButtonAdded = false;
 		}
 		
-		navButtonAdded = inRegion;
+		regionId = newRegionId;
 		
 		refreshPanel();
+	}
+	
+	public NavigationButton buildNavIcon(RaidInfo raidInfo)
+	{
+		String tooltip = " Party Gear Checker";
+		BufferedImage icon = null;
+		if (raidInfo == RaidInfo.ToA)
+		{
+			icon = ImageUtil.loadImageResource(ToaGearCheckPanel.class, "toa.png");
+			tooltip = "ToA" + tooltip;
+		}
+		else if (raidInfo == RaidInfo.ToB)
+		{
+			icon = ImageUtil.loadImageResource(ToaGearCheckPanel.class, "tob.png");
+			tooltip = "ToB" + tooltip;
+		}
+		
+		return NavigationButton.builder()
+				.tooltip(tooltip)
+				.icon(icon)
+				.priority(10)
+				.panel(raidGearCheckPanel)
+				.build();
 	}
 	
 	public void refreshPanel()
@@ -131,21 +153,15 @@ public class ToAGearCheckPlugin extends Plugin
 			return;
 		}
 		
-		Widget[] partyApplicantWidget = client.getWidget(ToAGearCheckPlugin.PartyApplicantWidgetGroup, ToAGearCheckPlugin.PartyApplicantWidgetChild).getChildren();
+		RaidInfo raidInfo = RaidInfo.inRegion(regionId);
 		
-		if (partyApplicantWidget == null) //Shouldn't ever be null
+		if (raidInfo == null)
 		{
 			return;
 		}
 		
-		Stream<Widget> partyApplicantWidgetChildren = Arrays.stream(partyApplicantWidget).filter(x -> x.getOriginalWidth() == 114 && x.getOriginalHeight() == 22); //Easiest way to filter out the widget containing the player name
-		List<String> playerListStr = new ArrayList<>();
+		List<String> playerListStr = raidInfo.getPlayers(client);
 		HashMap<Player, List<ItemComposition>> playerList = new HashMap<>();
-		
-		partyApplicantWidgetChildren.forEach(widget ->
-		{
-			playerListStr.add(widget.getText());
-		});
 		
 		for (Player player : client.getPlayers())
 		{
@@ -168,6 +184,6 @@ public class ToAGearCheckPlugin extends Plugin
 			}
 			playerList.put(player, listOfEquipment);
 		}
-		toaGearCheckPanel.updatePanel(playerList);
+		raidGearCheckPanel.updatePanel(playerList);
 	}
 }
