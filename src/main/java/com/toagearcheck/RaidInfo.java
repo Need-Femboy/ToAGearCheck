@@ -8,8 +8,6 @@ import lombok.AllArgsConstructor;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 @AllArgsConstructor
@@ -18,9 +16,6 @@ public enum RaidInfo
 {
 	ToA(13454, 774, 48, 114, 22),
 	ToB(14642, 50, 42, 160, 13);
-	
-	private static final Map<Integer, RaidInfo> REGION_LOOKUP =
-			Arrays.stream(values()).collect(Collectors.toMap(r -> r.regionId, r -> r, (a, b) -> a, ConcurrentHashMap::new));
 	
 	private final int regionId;
 	private final int widgetGroup;
@@ -45,7 +40,10 @@ public enum RaidInfo
 	
 	public static RaidInfo inRegion(int regionId)
 	{
-		return REGION_LOOKUP.get(regionId);
+		return Arrays.stream(RaidInfo.values())
+				.filter(r -> r.regionId == regionId)
+				.findFirst()
+				.orElse(null);
 	}
 	
 	public static boolean widgetAccess(int widgetGroup)

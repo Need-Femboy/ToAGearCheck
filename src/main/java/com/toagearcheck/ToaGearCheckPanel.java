@@ -14,6 +14,7 @@ import javax.inject.Singleton;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -55,7 +56,7 @@ public class ToaGearCheckPanel extends PluginPanel
 	}
 	
 	
-	public void updatePanel(HashMap<Player, List<ItemComposition>> playerList)
+	public void updatePanel(HashMap<Player, List<ItemComposition>> playerList, HashMap<String, ChatMemory> playerChatHistory)
 	{
 		SwingUtilities.invokeLater(() ->
 		{
@@ -75,6 +76,9 @@ public class ToaGearCheckPanel extends PluginPanel
 			
 			for (Map.Entry<Player, List<ItemComposition>> player : playerList.entrySet())
 			{
+				String playerName = player.getKey().getName();
+				ChatMemory chatMemory = playerChatHistory.getOrDefault(playerName, new ChatMemory());
+				ArrayList<String> messages = chatMemory.getList();
 				JPanel equipmentPanels = new JPanel(new GridBagLayout());
 				GridBagConstraints c = new GridBagConstraints();
 				c.fill = GridBagConstraints.HORIZONTAL;
@@ -88,9 +92,20 @@ public class ToaGearCheckPanel extends PluginPanel
 					equipmentPanels.add(new ItemPanel(itemComposition, itemImage), c);
 					c.gridy++;
 				}
-				partyTabs.addTab(player.getKey().getName(), equipmentPanels);
 				
-				if (player.getKey().getName().equals(lastUserSelected))
+				equipmentPanels.add(createLabel("[Ascending order of messages]"), c);
+				c.gridy++;
+				
+				for (int i = 0; i < 5; i++)
+				{
+					String message = "[" + i + "] ";
+					equipmentPanels.add(createLabel((i < messages.size()) ? message + messages.get(i) : message), c);
+					c.gridy++;
+				}
+				
+				partyTabs.addTab(playerName, equipmentPanels);
+				
+				if (playerName.equals(lastUserSelected))
 				{
 					partyTabs.setSelectedComponent(equipmentPanels);
 				}
@@ -99,5 +114,12 @@ public class ToaGearCheckPanel extends PluginPanel
 			repaint();
 			revalidate();
 		});
+	}
+	
+	private JLabel createLabel(String text)
+	{
+		JLabel chatLabel = new JLabel(text);
+		chatLabel.setForeground(Color.WHITE);
+		return chatLabel;
 	}
 }

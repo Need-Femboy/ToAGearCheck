@@ -2,6 +2,7 @@ package com.toagearcheck;
 
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.*;
+import net.runelite.api.events.ChatMessage;
 import net.runelite.api.events.GameTick;
 import net.runelite.api.events.WidgetClosed;
 import net.runelite.api.events.WidgetLoaded;
@@ -14,6 +15,7 @@ import net.runelite.client.plugins.PluginDescriptor;
 import net.runelite.client.ui.ClientToolbar;
 import net.runelite.client.ui.NavigationButton;
 import net.runelite.client.util.ImageUtil;
+import net.runelite.client.util.Text;
 
 import javax.inject.Inject;
 import javax.swing.*;
@@ -51,6 +53,7 @@ public class ToAGearCheckPlugin extends Plugin
 	private boolean checkingApplicants = false;
 	private ToaGearCheckPanel raidGearCheckPanel;
 	private int regionId = -1;
+	private HashMap<String, ChatMemory> playerChatHistory = new HashMap<>();
 	
 	@Override
 	protected void startUp() throws Exception
@@ -58,13 +61,29 @@ public class ToAGearCheckPlugin extends Plugin
 		raidGearCheckPanel = injector.getInstance(ToaGearCheckPanel.class);
 		toaButton = ImageUtil.loadImageResource(ToaGearCheckPanel.class, "toa.png");
 		tobButton = ImageUtil.loadImageResource(ToaGearCheckPanel.class, "tob.png");
-		navButton = buildNavIcon(RaidInfo.ToA);
 	}
 	
 	@Override
 	protected void shutDown() throws Exception
 	{
-		pluginToolbar.removeNavigation(navButton);
+		if (navButton != null)
+		{
+			pluginToolbar.removeNavigation(navButton);
+		}
+	}
+	
+	@Subscribe
+	private void onChatMessage(ChatMessage event)
+	{
+		if (event.getType() != ChatMessageType.PUBLICCHAT)
+		{
+			return;
+		}
+		
+		String player = Text.sanitize(event.getName());
+		ChatMemory chatMemory = playerChatHistory.containsKey(player) ? playerChatHistory.get(player) : new ChatMemory();
+		chatMemory.add(event.getMessage());
+		playerChatHistory.put(player, chatMemory);
 	}
 	
 	@Subscribe
@@ -116,6 +135,7 @@ public class ToAGearCheckPlugin extends Plugin
 		{
 			pluginToolbar.removeNavigation(navButton);
 			navButtonAdded = false;
+			playerChatHistory.clear();
 		}
 		
 		regionId = newRegionId;
@@ -129,12 +149,12 @@ public class ToAGearCheckPlugin extends Plugin
 		BufferedImage icon = null;
 		if (raidInfo == RaidInfo.ToA)
 		{
-			icon = ImageUtil.loadImageResource(ToaGearCheckPanel.class, "toa.png");
+			icon = toaButton;
 			tooltip = "ToA" + tooltip;
 		}
 		else if (raidInfo == RaidInfo.ToB)
 		{
-			icon = ImageUtil.loadImageResource(ToaGearCheckPanel.class, "tob.png");
+			icon = tobButton;
 			tooltip = "ToB" + tooltip;
 		}
 		
@@ -184,6 +204,6 @@ public class ToAGearCheckPlugin extends Plugin
 			}
 			playerList.put(player, listOfEquipment);
 		}
-		raidGearCheckPanel.updatePanel(playerList);
+		raidGearCheckPanel.updatePanel(playerList, playerChatHistory);
 	}
 }
