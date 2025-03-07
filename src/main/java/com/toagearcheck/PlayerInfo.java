@@ -32,7 +32,7 @@ public class PlayerInfo
 	
 	public void setRole(Role role)
 	{
-		if (role == null) //Stops random messages from unmarking your roll call
+		if (role == Role.NONE) //Stops random messages from unmarking your roll call
 		{
 			return;
 		}
