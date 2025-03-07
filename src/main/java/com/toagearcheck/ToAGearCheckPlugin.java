@@ -1,11 +1,9 @@
 package com.toagearcheck;
 
+import com.google.common.collect.ImmutableSet;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.*;
-import net.runelite.api.events.ChatMessage;
-import net.runelite.api.events.GameTick;
-import net.runelite.api.events.WidgetClosed;
-import net.runelite.api.events.WidgetLoaded;
+import net.runelite.api.events.*;
 import net.runelite.api.kit.KitType;
 import net.runelite.client.callback.ClientThread;
 import net.runelite.client.eventbus.Subscribe;
@@ -23,6 +21,7 @@ import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Set;
 
 @Slf4j
 @PluginDescriptor(
@@ -72,6 +71,42 @@ public class ToAGearCheckPlugin extends Plugin
 		}
 	}
 	
+	Set<Integer> animationList = ImmutableSet.of(855, 856, 858, 859);
+	
+	@Subscribe
+	private void onAnimationChanged(AnimationChanged event)
+	{
+		if (!(event.getActor() instanceof Player) || !animationList.contains(event.getActor().getAnimation()))
+		{
+			return;
+		}
+		
+		String s;
+		
+		switch (event.getActor().getAnimation())
+		{
+			case 855:
+				s = "sfrz"; //Yes emote
+				break;
+			case 856:
+				s = "nfrz"; //No emote
+				break;
+			case 858:
+				s = "rdps"; //Bow emote
+				break;
+			case 859:
+				s = "mdps"; //Angry emote
+				break;
+			default:
+				return;
+		}
+		
+		String player = event.getActor().getName();
+		ChatMemory chatMemory = getChatMemory(event.getActor().getName());
+		chatMemory.add(s);
+		playerChatHistory.put(player, chatMemory);
+	}
+	
 	@Subscribe
 	private void onChatMessage(ChatMessage event)
 	{
@@ -81,9 +116,14 @@ public class ToAGearCheckPlugin extends Plugin
 		}
 		
 		String player = Text.sanitize(event.getName());
-		ChatMemory chatMemory = playerChatHistory.containsKey(player) ? playerChatHistory.get(player) : new ChatMemory();
+		ChatMemory chatMemory = getChatMemory(player);
 		chatMemory.add(event.getMessage());
 		playerChatHistory.put(player, chatMemory);
+	}
+	
+	private ChatMemory getChatMemory(String player)
+	{
+		return playerChatHistory.containsKey(player) ? playerChatHistory.get(player) : new ChatMemory();
 	}
 	
 	@Subscribe
