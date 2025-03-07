@@ -60,60 +60,76 @@ public class ToaGearCheckPanel extends PluginPanel
 	{
 		SwingUtilities.invokeLater(() ->
 		{
-			String lastUserSelected = "";
-			
-			if (partyTabs.getSelectedIndex() != -1)
+			if (playerList.isEmpty())
 			{
-				lastUserSelected = partyTabs.getTitleAt(partyTabs.getSelectedIndex());
-			}
-			
-			partyTabs.removeAll();
-			
-			if (playerList.size() == 0)
-			{
+				partyTabs.removeAll();
 				return;
 			}
 			
-			for (Map.Entry<Player, List<ItemComposition>> player : playerList.entrySet())
+			String lastUserSelected = partyTabs.getSelectedIndex() != -1
+					? partyTabs.getTitleAt(partyTabs.getSelectedIndex())
+					: "";
+			
+			final GridBagConstraints constraints = createGridBagConstraints();
+			
+			partyTabs.removeAll();
+			
+			playerList.forEach((player, items) ->
 			{
-				String playerName = player.getKey().getName();
+				String playerName = player.getName();
 				PlayerInfo playerInfo = allPlayerInfo.getOrDefault(playerName, new PlayerInfo());
 				ArrayList<String> messages = playerInfo.getList();
-				JPanel equipmentPanels = new JPanel(new GridBagLayout());
-				GridBagConstraints c = new GridBagConstraints();
-				c.fill = GridBagConstraints.HORIZONTAL;
-				c.weightx = 1;
-				c.gridx = 0;
-				c.gridy = 0;
 				
-				for (ItemComposition itemComposition : player.getValue())
+				JPanel equipmentPanel = createEquipmentPanel(items, messages, constraints);
+				
+				String fullName = playerName + playerInfo.getRole().getShortName();
+				partyTabs.addTab(fullName, equipmentPanel);
+				
+				if (fullName.equals(lastUserSelected))
 				{
-					AsyncBufferedImage itemImage = itemManager.getImage(itemComposition.getId());
-					equipmentPanels.add(new ItemPanel(itemComposition, itemImage), c);
-					c.gridy++;
+					partyTabs.setSelectedComponent(equipmentPanel);
 				}
-				
-				equipmentPanels.add(createLabel("[Ascending order of messages]"), c);
-				c.gridy++;
-				
-				for (int i = 0; i < 5; i++)
-				{
-					String message = "[" + i + "] ";
-					equipmentPanels.add(createLabel((i < messages.size()) ? message + messages.get(i) : message), c);
-					c.gridy++;
-				}
-				
-				partyTabs.addTab(playerName + playerInfo.getRole().getShortName(), equipmentPanels);
-				
-				if (playerName.equals(lastUserSelected))
-				{
-					partyTabs.setSelectedComponent(equipmentPanels);
-				}
-			}
+			});
 			
 			repaint();
 			revalidate();
 		});
+	}
+	
+	private GridBagConstraints createGridBagConstraints()
+	{
+		GridBagConstraints c = new GridBagConstraints();
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.weightx = 1;
+		c.gridx = 0;
+		c.gridy = 0;
+		return c;
+	}
+	
+	private JPanel createEquipmentPanel(List<ItemComposition> items, List<String> messages,
+										GridBagConstraints constraints)
+	{
+		JPanel panel = new JPanel(new GridBagLayout());
+		int gridY = 0;
+		
+		for (ItemComposition item : items)
+		{
+			AsyncBufferedImage itemImage = itemManager.getImage(item.getId());
+			constraints.gridy = gridY++;
+			panel.add(new ItemPanel(item, itemImage), constraints);
+		}
+		
+		constraints.gridy = gridY++;
+		panel.add(createLabel("[Ascending order of messages]"), constraints);
+		
+		for (int i = 0; i < 5; i++)
+		{
+			String message = "[" + i + "] " + (i < messages.size() ? messages.get(i) : "");
+			constraints.gridy = gridY++;
+			panel.add(createLabel(message), constraints);
+		}
+		
+		return panel;
 	}
 	
 	private JLabel createLabel(String text)

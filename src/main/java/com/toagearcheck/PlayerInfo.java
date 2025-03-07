@@ -9,7 +9,7 @@ public class PlayerInfo
 	private final ArrayList<String> list;
 	private final int maxSize = 5;
 	@Getter
-	private Role role;
+	private Role role = Role.NONE;
 	
 	public PlayerInfo()
 	{
