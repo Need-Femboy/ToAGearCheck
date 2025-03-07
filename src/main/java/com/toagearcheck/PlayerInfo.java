@@ -1,18 +1,22 @@
 package com.toagearcheck;
 
+import lombok.Getter;
+
 import java.util.ArrayList;
 
-public class ChatMemory
+public class PlayerInfo
 {
 	private final ArrayList<String> list;
 	private final int maxSize = 5;
+	@Getter
+	private Role role;
 	
-	public ChatMemory()
+	public PlayerInfo()
 	{
 		list = new ArrayList<>(maxSize);
 	}
 	
-	public void add(String element)
+	public void addChatMessage(String element)
 	{
 		if (list.size() >= maxSize)
 		{
@@ -24,5 +28,15 @@ public class ChatMemory
 	public ArrayList<String> getList()
 	{
 		return list;
+	}
+	
+	public void setRole(Role role)
+	{
+		if (role == null) //Stops random messages from unmarking your roll call
+		{
+			return;
+		}
+		
+		this.role = role;
 	}
 }

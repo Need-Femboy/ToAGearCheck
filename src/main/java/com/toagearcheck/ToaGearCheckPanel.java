@@ -56,7 +56,7 @@ public class ToaGearCheckPanel extends PluginPanel
 	}
 	
 	
-	public void updatePanel(HashMap<Player, List<ItemComposition>> playerList, HashMap<String, ChatMemory> playerChatHistory)
+	public void updatePanel(HashMap<Player, List<ItemComposition>> playerList, HashMap<String, PlayerInfo> allPlayerInfo)
 	{
 		SwingUtilities.invokeLater(() ->
 		{
@@ -77,8 +77,8 @@ public class ToaGearCheckPanel extends PluginPanel
 			for (Map.Entry<Player, List<ItemComposition>> player : playerList.entrySet())
 			{
 				String playerName = player.getKey().getName();
-				ChatMemory chatMemory = playerChatHistory.getOrDefault(playerName, new ChatMemory());
-				ArrayList<String> messages = chatMemory.getList();
+				PlayerInfo playerInfo = allPlayerInfo.getOrDefault(playerName, new PlayerInfo());
+				ArrayList<String> messages = playerInfo.getList();
 				JPanel equipmentPanels = new JPanel(new GridBagLayout());
 				GridBagConstraints c = new GridBagConstraints();
 				c.fill = GridBagConstraints.HORIZONTAL;
@@ -103,7 +103,7 @@ public class ToaGearCheckPanel extends PluginPanel
 					c.gridy++;
 				}
 				
-				partyTabs.addTab(playerName, equipmentPanels);
+				partyTabs.addTab(playerName + playerInfo.getRole().getShortName(), equipmentPanels);
 				
 				if (playerName.equals(lastUserSelected))
 				{

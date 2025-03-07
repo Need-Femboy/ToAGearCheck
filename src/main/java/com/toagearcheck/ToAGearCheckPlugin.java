@@ -52,7 +52,7 @@ public class ToAGearCheckPlugin extends Plugin
 	private boolean checkingApplicants = false;
 	private ToaGearCheckPanel raidGearCheckPanel;
 	private int regionId = -1;
-	private HashMap<String, ChatMemory> playerChatHistory = new HashMap<>();
+	private HashMap<String, PlayerInfo> playerInfo = new HashMap<>();
 	
 	@Override
 	protected void startUp() throws Exception
@@ -82,29 +82,35 @@ public class ToAGearCheckPlugin extends Plugin
 		}
 		
 		String s;
+		Role r;
 		
 		switch (event.getActor().getAnimation())
 		{
 			case 855:
 				s = "sfrz"; //Yes emote
+				r = Role.SFRZ;
 				break;
 			case 856:
 				s = "nfrz"; //No emote
+				r = Role.NFRZ;
 				break;
 			case 858:
 				s = "rdps"; //Bow emote
+				r = Role.RDPS;
 				break;
 			case 859:
 				s = "mdps"; //Angry emote
+				r = Role.MDPS;
 				break;
 			default:
 				return;
 		}
 		
 		String player = event.getActor().getName();
-		ChatMemory chatMemory = getChatMemory(event.getActor().getName());
-		chatMemory.add(s);
-		playerChatHistory.put(player, chatMemory);
+		PlayerInfo chatMemory = getPlayerInfo(event.getActor().getName());
+		chatMemory.addChatMessage(s);
+		chatMemory.setRole(r);
+		playerInfo.put(player, chatMemory);
 	}
 	
 	@Subscribe
@@ -116,14 +122,18 @@ public class ToAGearCheckPlugin extends Plugin
 		}
 		
 		String player = Text.sanitize(event.getName());
-		ChatMemory chatMemory = getChatMemory(player);
-		chatMemory.add(event.getMessage());
-		playerChatHistory.put(player, chatMemory);
+		String message = event.getMessage();
+		
+		PlayerInfo chatMemory = getPlayerInfo(player);
+		chatMemory.addChatMessage(message);
+		chatMemory.setRole(Role.getRole(message));
+		
+		playerInfo.put(player, chatMemory);
 	}
 	
-	private ChatMemory getChatMemory(String player)
+	private PlayerInfo getPlayerInfo(String player)
 	{
-		return playerChatHistory.containsKey(player) ? playerChatHistory.get(player) : new ChatMemory();
+		return playerInfo.containsKey(player) ? playerInfo.get(player) : new PlayerInfo();
 	}
 	
 	@Subscribe
@@ -175,7 +185,7 @@ public class ToAGearCheckPlugin extends Plugin
 		{
 			pluginToolbar.removeNavigation(navButton);
 			navButtonAdded = false;
-			playerChatHistory.clear();
+			playerInfo.clear();
 		}
 		
 		regionId = newRegionId;
@@ -244,6 +254,6 @@ public class ToAGearCheckPlugin extends Plugin
 			}
 			playerList.put(player, listOfEquipment);
 		}
-		raidGearCheckPanel.updatePanel(playerList, playerChatHistory);
+		raidGearCheckPanel.updatePanel(playerList, playerInfo);
 	}
 }
