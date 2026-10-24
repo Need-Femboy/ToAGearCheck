@@ -27,7 +27,7 @@ import java.util.Set;
 @PluginDescriptor(
 		name = "Raid Party Gear Checker",
 		description = "Checks gear of party applicants",
-		tags = {"toa", "raids3", "tombs of amascut", "tob", "theatre of blood"}
+		tags = {"toa", "raids3", "tombs of amascut", "tob", "theatre of blood", "tfa", "raids4", "the fractured archive"}
 )
 public class ToAGearCheckPlugin extends Plugin
 {
@@ -45,6 +45,7 @@ public class ToAGearCheckPlugin extends Plugin
 	
 	private BufferedImage toaButton;
 	private BufferedImage tobButton;
+	private BufferedImage tfaButton;
 	
 	private NavigationButton navButton;
 	
@@ -60,6 +61,7 @@ public class ToAGearCheckPlugin extends Plugin
 		raidGearCheckPanel = injector.getInstance(ToaGearCheckPanel.class);
 		toaButton = ImageUtil.loadImageResource(ToaGearCheckPanel.class, "toa.png");
 		tobButton = ImageUtil.loadImageResource(ToaGearCheckPanel.class, "tob.png");
+		tfaButton = ImageUtil.loadImageResource(ToaGearCheckPanel.class, "tfa.png");
 	}
 	
 	@Override
@@ -162,6 +164,10 @@ public class ToAGearCheckPlugin extends Plugin
 	@Subscribe
 	private void onGameTick(GameTick event)
 	{
+		if (client.getLocalPlayer() == null)
+		{
+			return;
+		}
 		int newRegionId = client.getLocalPlayer().getWorldLocation().getRegionID();
 		RaidInfo raidInfo = RaidInfo.inRegion(newRegionId);
 		boolean isInRaidLobby = raidInfo != null;
@@ -175,7 +181,7 @@ public class ToAGearCheckPlugin extends Plugin
 				navButtonAdded = true;
 			}
 			else if (newRegionId != regionId)
-			{ //If teleporting from ToA lobby straight to ToB
+			{ // If teleporting directly between raid lobbies
 				pluginToolbar.removeNavigation(navButton);
 				navButton = buildNavIcon(raidInfo);
 				pluginToolbar.addNavigation(navButton);
@@ -207,6 +213,11 @@ public class ToAGearCheckPlugin extends Plugin
 			icon = tobButton;
 			tooltip = "ToB" + tooltip;
 		}
+		else if (raidInfo == RaidInfo.TFA)
+		{
+			icon = tfaButton;
+			tooltip = "TFA" + tooltip;
+		}
 		
 		return NavigationButton.builder()
 				.tooltip(tooltip)
@@ -235,7 +246,7 @@ public class ToAGearCheckPlugin extends Plugin
 		
 		for (Player player : client.getPlayers())
 		{
-			if (!playerListStr.contains(player.getName()))
+			if (player.getName() == null || !playerListStr.contains(Text.standardize(player.getName())))
 			{
 				continue;
 			}

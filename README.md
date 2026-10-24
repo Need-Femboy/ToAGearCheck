@@ -1,6 +1,16 @@
 # Raid Applicant Gear Checker
 
-Plugin to view gear of people applying to currently viewed ToB/ToA party.
+Plugin to view gear of people applying to the currently viewed ToB/ToA/TFA party.
+
+For The Fractured Archive, open a party's details and select its applicants tab.
+The gear panel matches applicants against players loaded nearby, just like ToB/ToA.
+It shows currently worn equipment, not inventories or banked gear. Applicants outside
+the loaded scene cannot be inspected. The TFA tab uses this plugin's existing icon.
+
+TFA integration uses lobby region 16470 and `TfaPartydetails.APPLICANTS_LIST`.
+The name is child `22 * row + 1`, confirmed in build 241 clientscript 10058;
+the separate members list has a different row layout. Colour/image tags are removed
+before matching names, including formatting added by the TFA plugin.
 
 Mainly used to help filter through applicants on FFA worlds.
 
